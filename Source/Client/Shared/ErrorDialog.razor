@@ -1,0 +1,29 @@
+
+<div class="modal @ErrorModalClass">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Error</p>
+            <button class="delete" aria-label="close" @onclick="Close"></button>
+        </header>
+        <section class="modal-card-body">
+            @ErrorMessage
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button is-danger" @onclick="Close">Close</button>
+        </footer>
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter] public bool IsError { get; set; }
+    [Parameter] public string ErrorMessage { get; set; }  
+    [Parameter] public EventCallback OnClosedDialog { get; set; }
+    private string ErrorModalClass => IsError ? "is-active" : "";
+
+    private async Task Close(){
+        await OnClosedDialog.InvokeAsync(null);
+    }
+}

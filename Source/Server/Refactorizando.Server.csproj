@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.DotNet.Watcher.Tools" Version="1.0.0-msbuild2-final"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1"/>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.3"/>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="5.0.2"/>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.8.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.2"/>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.10"/>
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0-alpha.2"/>
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Design" Version="1.1.2"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.2"/>
+    <PackageReference Include="Mabar.Cross.Mailing.Client" Version="1.0.0.78" />
+    <PackageReference Include="Mabar.Cross.Images.Client" Version="1.0.0.85" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Client\Refactorizando.Client.csproj"/>
+    <ProjectReference Include="..\Shared\Refactorizando.Shared.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Watch Include="..\**\*.csproj"/>
+    <Watch Include="..\**\*.razor"/>
+    <Watch Include="..\**\*.cs" Exclude="..\**\*.g.cs"/>
+    <Watch Include="..\**\*.css"/>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="secrets.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

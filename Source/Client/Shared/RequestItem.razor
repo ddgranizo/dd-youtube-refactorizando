@@ -1,0 +1,87 @@
+@inject ILikeRequestsService LikeRequestsService
+@inject NavigationManager NavigationManager
+<div class="card">
+    <div class="card-content">
+        <div class="media">
+        <div class="media-left">
+            <figure class="image is-48x48">
+            <img src="@(User.ProfileUrl)" alt="Profile picture">
+            </figure>
+        </div>
+            <div class="media-content">
+                <p class="title is-4 has-text-black">@(User.Name)</p>
+                <p class="subtitle is-6 has-text-black">
+                    <span class="icon">
+                        <i class="mdi mdi-github"></i>
+                        </span>
+                    <a href="@(Request.RepositoryUri)" target="_blank">
+                        Repository
+                    </a>
+                </p>
+            </div>
+        </div>
+        
+        <div class="content ellipsis is-ellipsis-6 is-clickable" @onclick="Navigate">
+        @(Request.Description) 
+        </div>
+       
+    </div>
+     <footer class="card-footer">
+       
+        <span class="card-footer-item has-text-success">@(Request.StateReasonString())</span>
+         <span class="card-footer-item has-text-centered">
+            @(Request.CreatedOn.ToString("dd MMMM yyyy"))
+        </span>
+        <span class="card-footer-item">
+             <span>
+                  @(Request.LikesCount)  
+            </span>
+            @if (Request.HasCurrentUserLike)
+            {
+               
+                <span class="icon is-clickable has-text-info" @onclick="Dislike">
+                    <i class="mdi mdi-thumb-up"></i>
+                </span>
+            }
+            else
+            {
+                <span class="icon is-clickable" @onclick="Like">
+                    <i class="mdi mdi-thumb-up"></i>
+                </span>
+            }
+        </span>
+    </footer>
+</div>
+
+@code {
+    [Parameter] public RequestDto Request { get; set; }
+    [Parameter] public SystemUserDto User { get; set; }
+
+
+    private void Navigate(){
+        NavigationManager.NavigateTo($"requests/{Request.Id}");
+    }
+    private async Task Like()
+    {
+        var response =   await LikeRequestsService.Like(Request.Id);
+        if (response.IsOkResponse())
+        {
+            Request.HasCurrentUserLike = true;
+            Request.LikesCount++;
+        }
+    }
+    private async Task Dislike()
+    {
+        var response =   await LikeRequestsService.Dislike(Request.Id);
+        if (response.IsOkResponse())
+        {
+            Request.HasCurrentUserLike = false;
+            Request.LikesCount--;
+        }
+    }
+
+     protected override void OnInitialized()
+    {
+        Console.WriteLine(User.ProfileUrl);
+    }
+}   

@@ -1,0 +1,90 @@
+@page "/login"
+@inject IAuthService AuthService
+@inject AppAuthenticationStateProvider AppAuthProvider
+@inject NavigationManager NavigationManager
+
+<section class="hero is-link is-fullheight">
+  <div class="hero-body">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+          <EditForm Model="userInfo" class="box"> 
+              <div class="field">
+                <label for="" class="label">Email</label>
+                <div class="control has-icons-left">
+                  <InputText type="email"  class="input" required @bind-Value="userInfo.Email" />
+                  <span class="icon is-small is-left">
+                    <i class="mdi mdi-at"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="" class="label">Password</label>
+                <div class="control has-icons-left">
+                  <InputText type="password" placeholder="*******" class="input" required @bind-Value="userInfo.Password" />
+                  <span class="icon is-small is-left">
+                    <i class="mdi mdi-lock"></i>
+                  </span>
+                </div>
+              </div>
+              @* <div class="field">
+                <label for="" class="checkbox">
+                  <input type="checkbox">
+                Remember me
+                </label>
+              </div> *@
+              <div class="field">
+                <button @onclick="TryLogin" class="button is-link @LoadingButtonClass">
+                  Login
+                </button>
+              </div>
+          </EditForm>
+          
+          @if (isError)
+          {
+              <div class="notification is-danger">
+                @errorMessage
+              </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+@code {
+
+  
+  private bool isError = false;
+  private string errorMessage;
+  private UserInfo userInfo =  new UserInfo();
+  private bool isLoading = false;
+  private string LoadingButtonClass => isLoading ? "is-loading" : "";
+  private async Task TryLogin()
+  {
+      if (isLoading)
+      {
+          return;
+      }
+      isLoading = true;
+      isError = false;
+      var loginRequest = await AuthService.Login(userInfo);
+      if (loginRequest.IsOkResponse())
+      {
+          await AppAuthProvider.Login(loginRequest.Value);
+          NavigationManager.NavigateTo("/", true);
+      }
+      else
+      {
+        Error("Invalid login or password");
+      }
+      isLoading = false;
+  }
+
+  private void Error(string message)
+  {
+    isError = true;
+    errorMessage = message;
+  }
+
+}

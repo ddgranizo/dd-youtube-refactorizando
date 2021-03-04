@@ -1,0 +1,32 @@
+
+
+
+
+<Router AppAssembly="@typeof(Program).Assembly" PreferExactMatches="@true">
+    <Found Context="routeData">
+        <CascadingValue Value="state">
+            <CascadingAuthenticationState>
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <Authorizing>
+                        <text>Authorizing</text>
+                    </Authorizing>
+                    <NotAuthorized>
+                        <text>NotAuthorized</text>
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </CascadingAuthenticationState>
+        </CascadingValue>
+    </Found>
+
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p>Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+
+@code {
+    private AppState state = new AppState();
+
+}

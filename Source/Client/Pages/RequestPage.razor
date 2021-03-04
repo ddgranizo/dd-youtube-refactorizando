@@ -1,0 +1,165 @@
+@page "/requests/new"
+@page "/requests/{Id}"
+@inject IRequestService RequestService
+@inject NavigationManager NavigationManager
+
+<section class="hero is-medium is-link">
+  <div class="hero-body">
+    <p class="title">
+      @(isCreatingMode ? "New request" : "Request info")
+    </p>
+    <p class="subtitle">
+      @(isCreatingMode ? "Fill the form for create new request" : "Info")
+    </p>
+    <div class="box is-fullwidth" >
+      @if (isLoading)
+      {
+          <Loading />
+      }
+      else
+      {
+        <EditForm Model="request">
+          <div class="buttons">
+            <button class="button" aria-controls="dropdown-menu" @onclick="NavigateToRequests">
+                <span class="icon is-small">
+                    <i class="mdi mdi-arrow-left-bold" aria-hidden="true"></i>
+                </span>
+                <span>My requests</span>
+            </button>
+            <button class="button" aria-controls="dropdown-menu" @onclick="Save">
+                <span class="icon is-small">
+                    <i class="mdi mdi-content-save" aria-hidden="true"></i>
+                </span>
+                <span>Save</span>
+            </button>
+            <button class="button" aria-controls="dropdown-menu" @onclick="(k => isConfirmOpen = true)">
+                <span class="icon is-small">
+                    <i class="mdi mdi-delete" aria-hidden="true"></i>
+                </span>
+                <span>Delete</span>
+            </button>
+          </div>
+          <div class="field">
+            <label class="label">Repository URL (git based and public)</label>
+            <div class="control">
+              <InputText  class="input" @bind-Value="request.RepositoryUri"></InputText>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Description. Please, tell my why this repository needs a refactor</label>
+            <div class="control">
+              <InputTextArea  class="textarea" @bind-Value="request.Description"></InputTextArea>
+            </div>
+          </div>
+        </EditForm>
+      }
+      
+    </div>
+  </div>
+</section>
+
+
+<ErrorDialog IsError="@isError" ErrorMessage="@errorMessage" OnClosedDialog="(k=>isError = false)"></ErrorDialog>
+<InfoDialog IsOpen="@isDialogOpen" Message="@dialogMessage" OnClosedDialog="(k=>isDialogOpen = false)" Title="Info"></InfoDialog>
+<ConfirmDialog ConfirmButtonStyle="is-danger" IsOpen="isConfirmOpen" Message="The request will be removed. Confirm?" OnCancelDialog="(k => isConfirmOpen = false)" OnConfirmDialog="OnConfirmDelete" />
+
+@code{
+  [Parameter] public string Id { get; set; }
+
+  private bool isConfirmOpen;
+
+  private Guid requestId;
+  private bool isCreatingMode;
+
+  private bool isError = false;
+  private string errorMessage;
+  private bool isDialogOpen = false;
+  private string dialogMessage;
+  private bool isLoading;
+  private RequestDto request = new RequestDto();
+
+  private void NavigateToRequests()
+  {
+    NavigationManager.NavigateTo("/requests");
+  }
+  private async Task Save()
+  {
+    isLoading = true;
+    if (isCreatingMode)
+    {
+        var response = await RequestService.Create(request);
+        if (response.IsOkResponse())
+        {
+          Info("Changes saved!");
+        }
+        else
+        {
+          Error(response.Message);
+        }
+    }
+    else
+    {
+        var response = await RequestService.Update(requestId, request);
+        if (response.IsOkResponse())
+        {
+          Info("Changes saved!");
+        }
+        else
+        {
+          Error(response.Message);
+        }
+    }
+    isLoading = false;
+  }
+
+
+  protected override async Task OnInitializedAsync()
+  {
+      isCreatingMode = true;
+      if (!string.IsNullOrEmpty(Id)
+            && Guid.TryParse(Id, out requestId))
+      {
+          isLoading = true;
+          isCreatingMode = false;
+          var response = await RequestService.Get(requestId);
+          if (response.IsOkResponse())
+          {
+            request = response.Value;
+          }
+          else
+          {
+            Error(response.Message);
+          }
+          isLoading = false;
+      }
+  }
+
+
+  private async Task OnConfirmDelete()
+  {
+      isLoading = true;
+      var response = await RequestService.Delete(requestId);
+      if (response.IsOkResponse())
+      {
+        isConfirmOpen = false;
+        NavigationManager.NavigateTo("/requests");
+      }
+      else
+      {
+        Error(response.Message);
+      }
+      isLoading = false;
+  }
+  private void Info(string message)
+  {
+      isDialogOpen = true;
+      dialogMessage = message;
+  }
+  
+  private void Error(string message)
+  {
+      isError = true;
+      errorMessage = message;
+  }
+
+}                  
