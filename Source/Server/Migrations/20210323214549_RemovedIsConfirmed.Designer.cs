@@ -9,8 +9,8 @@ using Refactorizando.Server;
 namespace Refactorizando.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210219185647_AddedRequestsTable")]
-    partial class AddedRequestsTable
+    [Migration("20210323214549_RemovedIsConfirmed")]
+    partial class RemovedIsConfirmed
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -48,14 +48,14 @@ namespace Refactorizando.Server.Migrations
                         new
                         {
                             Id = "60c51d0e-6c24-4191-970b-aefb93fb9c51",
-                            ConcurrencyStamp = "5dc9cda2-c4e0-4f45-b90b-029e49ccd499",
+                            ConcurrencyStamp = "885774e8-9231-4009-b9fe-f02bcb2d6f0b",
                             Name = "admin",
                             NormalizedName = "admin"
                         },
                         new
                         {
                             Id = "adce8478-150e-4f7a-8dff-22bf15a0be0f",
-                            ConcurrencyStamp = "e91f6edf-6e93-4179-8d7a-1e672a87d43a",
+                            ConcurrencyStamp = "065c9dac-f3f5-466f-92c8-ef98af50f95c",
                             Name = "user",
                             NormalizedName = "user"
                         });
@@ -233,11 +233,36 @@ namespace Refactorizando.Server.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("Refactorizando.Shared.Data.Models.LikeRequest", b =>
+                {
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("SystemUserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("RequestId", "SystemUserId");
+
+                    b.HasIndex("SystemUserId");
+
+                    b.ToTable("LikeRequests");
+                });
+
             modelBuilder.Entity("Refactorizando.Shared.Data.Models.Request", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
@@ -248,8 +273,14 @@ namespace Refactorizando.Server.Migrations
                     b.Property<int>("State")
                         .HasColumnType("int");
 
+                    b.Property<int>("StateReason")
+                        .HasColumnType("int");
+
                     b.Property<string>("SystemUserId")
                         .HasColumnType("varchar(255)");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -264,6 +295,15 @@ namespace Refactorizando.Server.Migrations
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ProfileUrl")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Surname")
+                        .HasColumnType("longtext");
 
                     b.HasDiscriminator().HasValue("SystemUser");
                 });
@@ -319,6 +359,25 @@ namespace Refactorizando.Server.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Refactorizando.Shared.Data.Models.LikeRequest", b =>
+                {
+                    b.HasOne("Refactorizando.Shared.Data.Models.Request", "Request")
+                        .WithMany("LikeRequests")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Refactorizando.Shared.Data.Models.SystemUser", "SystemUser")
+                        .WithMany("LikeRequests")
+                        .HasForeignKey("SystemUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Request");
+
+                    b.Navigation("SystemUser");
+                });
+
             modelBuilder.Entity("Refactorizando.Shared.Data.Models.Request", b =>
                 {
                     b.HasOne("Refactorizando.Shared.Data.Models.SystemUser", "SystemUser")
@@ -328,8 +387,15 @@ namespace Refactorizando.Server.Migrations
                     b.Navigation("SystemUser");
                 });
 
+            modelBuilder.Entity("Refactorizando.Shared.Data.Models.Request", b =>
+                {
+                    b.Navigation("LikeRequests");
+                });
+
             modelBuilder.Entity("Refactorizando.Shared.Data.Models.SystemUser", b =>
                 {
+                    b.Navigation("LikeRequests");
+
                     b.Navigation("Requests");
                 });
 #pragma warning restore 612, 618

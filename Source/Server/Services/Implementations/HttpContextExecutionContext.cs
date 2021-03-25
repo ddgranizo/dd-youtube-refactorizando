@@ -16,7 +16,7 @@ namespace Refactorizando.Server.Services.Implementations
 
         public string GetUserId()
         {
-            return HttpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            return HttpContextAccessor.HttpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
         }
     }
 }

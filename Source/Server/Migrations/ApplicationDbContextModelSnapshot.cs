@@ -46,14 +46,14 @@ namespace Refactorizando.Server.Migrations
                         new
                         {
                             Id = "60c51d0e-6c24-4191-970b-aefb93fb9c51",
-                            ConcurrencyStamp = "05228e26-86f4-4731-ba49-d5bce39e87ce",
+                            ConcurrencyStamp = "885774e8-9231-4009-b9fe-f02bcb2d6f0b",
                             Name = "admin",
                             NormalizedName = "admin"
                         },
                         new
                         {
                             Id = "adce8478-150e-4f7a-8dff-22bf15a0be0f",
-                            ConcurrencyStamp = "e5760d39-2de1-46f8-839f-d928e2a45859",
+                            ConcurrencyStamp = "065c9dac-f3f5-466f-92c8-ef98af50f95c",
                             Name = "user",
                             NormalizedName = "user"
                         });

@@ -1,8 +1,19 @@
 ﻿@page "/"
+@inject IRequestService RequestService
 
 <section class="hero is-link is-fullheight">
     <div class="hero-body">
-      <div class="container">
+      <div  class="row columns is-multiline">
+          @foreach (var item in requests.Values)
+          {
+              <div key="@(item.Id)" class="column is-4">
+                <RequestItem Request="item" 
+                            UserProfileImageUrl="@(item.SystemUser.ProfileUrl)"
+                            UserName="@(item.SystemUser.Name)"/>
+              </div>
+          }
+        </div>
+      @* <div class="container">
         <div class="columns  is-vcentered reverse-columns">
           <div class="column
           is-10-mobile is-offset-1-mobile
@@ -36,7 +47,7 @@
         </div>
 
         
-      </div>
+      </div> *@
     </div>
   </section>
   
@@ -78,5 +89,49 @@
       </div>
     </div>
   </section>
+<ErrorDialog IsError="@isError" ErrorMessage="@errorMessage" OnClosedDialog="(k=>isError = false)"></ErrorDialog>
 
   
+
+@code {
+  private DataSetResponse<RequestDto> requests = new DataSetResponse<RequestDto>();
+  private bool isLoading;
+
+  private bool isError = false;
+  private string errorMessage;
+  protected override async Task OnParametersSetAsync()
+  {
+      await LoadMyRequests();
+  }
+
+  private async Task LoadMyRequests()
+  {
+    isLoading = true;
+    var servicesResponse = await RequestService.GetAll(new QueryParameters(){Count = 10, Page = 1});
+    if (servicesResponse.IsOkResponse())
+    {
+        requests = servicesResponse.Value;
+    }
+    else
+    {
+        Error(servicesResponse.Message);
+    }
+    @* var userInfoResponse = await AuthService.GetUserInformation();
+    if (userInfoResponse.IsOkResponse())
+    {
+        User = userInfoResponse.Value;
+        
+    }
+    else
+    {
+      Error(userInfoResponse.Message);
+    } *@
+    isLoading = false;
+  }
+
+  private void Error(string message)
+  {
+      isError = true;
+      errorMessage = message;
+  }
+}

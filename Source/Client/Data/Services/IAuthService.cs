@@ -11,6 +11,8 @@ namespace Refactorizando.Client.Data.Services
         Task<ObjectHttpResponse<UserToken>> SignUp( SignUpRequest request); 
 
         Task<ObjectHttpResponse<UserToken>> Renovate();
-        Task<ObjectHttpResponse<SystemUserDto>> GetUserInformation();
+        // Task<ObjectHttpResponse<SystemUserDto>> GetUserInformation();
+        Task<HttpResponse> ValideEmail(string userId, string token); 
+
     }
 }

@@ -19,14 +19,14 @@ namespace Refactorizando.Client.Data.Services.Implementations
                 ?? throw new ArgumentNullException(nameof(httpManagerService));
         }
 
-        public async Task<ObjectHttpResponse<DataSetResponse<RequestDto>>> GetMines()
+        public async Task<ObjectHttpResponse<DataSetResponse<RequestDto>>> GetMines(QueryParameters parameters)
         {
-            return await httpManagerService.Get<DataSetResponse<RequestDto>>($"{ApiPath}/mine");
+            return await httpManagerService.Get<DataSetResponse<RequestDto>>($"{ApiPath}/mine?count={parameters.Count}&page={parameters.Page}" );
         }
 
-        public async Task<ObjectHttpResponse<DataSetResponse<RequestDto>>> GetAll()
+        public async Task<ObjectHttpResponse<DataSetResponse<RequestDto>>> GetAll(QueryParameters parameters)
         {
-            return await httpManagerService.Get<DataSetResponse<RequestDto>>($"{ApiPath}");
+            return await httpManagerService.Get<DataSetResponse<RequestDto>>($"{ApiPath}?count={parameters.Count}&page={parameters.Page}");
         }
 
         public async Task<ObjectHttpResponse<RequestDto>> Get(Guid id)

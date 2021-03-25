@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text;
 
 namespace Refactorizando.Shared.Utilities{
     public static class HttpUrlUtility {
@@ -11,5 +12,7 @@ namespace Refactorizando.Shared.Utilities{
             }
             return url;
         }
+
+       
     }
 }

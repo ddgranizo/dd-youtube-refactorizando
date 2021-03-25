@@ -9,5 +9,8 @@ namespace Refactorizando.Server
         public const string ImagesEndpoint = "IMAGES_ENDPOINT";
         public const string ImagesToken = "IMAGES_TOKEN";
 
+
+        public const string ConfirmationEmailTemplateId = "c86e6788-3a91-4bfe-960c-096ab0d682ce";
+
     }
 }

@@ -41,7 +41,6 @@ namespace Refactorizando.Shared.Data.Models
         public RequestStateReasons StateReason { get; set; }
         public string Comments { get; set; }
         public string VideoUrl { get; set; }
-
         public List<LikeRequest> LikeRequests {get; set; }
 
     }

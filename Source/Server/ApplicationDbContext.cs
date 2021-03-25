@@ -10,30 +10,43 @@ namespace Refactorizando.Server
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-            
+
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             var roleAdminId = "60c51d0e-6c24-4191-970b-aefb93fb9c51";
             var roleAdmin = new IdentityRole()
-            { 
-                Id = roleAdminId, 
-                Name = "admin", 
-                NormalizedName = "admin" 
+            {
+                Id = roleAdminId,
+                Name = "admin",
+                NormalizedName = "admin"
             };
-            var roleUserId =  "adce8478-150e-4f7a-8dff-22bf15a0be0f";
+            var roleUserId = "adce8478-150e-4f7a-8dff-22bf15a0be0f";
             var roleUser = new IdentityRole()
-            { 
-                Id = roleUserId, 
-                Name = "user", 
-                NormalizedName = "user" 
+            {
+                Id = roleUserId,
+                Name = "user",
+                NormalizedName = "user"
             };
             modelBuilder.Entity<IdentityRole>().HasData(roleAdmin);
             modelBuilder.Entity<IdentityRole>().HasData(roleUser);
+           
+            modelBuilder.Entity<LikeRequest>(entity => {
+                entity.HasKey(p =>  new {p.RequestId, p.SystemUserId});
+            });
 
             // modelBuilder.Entity<LikeRequest>(entity => {
-            //     entity.HasKey(p =>  new {p.RequestId, p.SystemUserId});
+            //     entity.HasOne(p => p.Request)
+            //             .WithMany(p => p.LikeRequests)
+            //             .HasForeignKey(p => p.RequestId)
+            //             .OnDelete(DeleteBehavior.NoAction);
+            // });
+            // modelBuilder.Entity<LikeRequest>(entity => {
+            //     entity.HasOne(p => p.SystemUser)
+            //             .WithMany(p => p.LikeRequests)
+            //             .HasForeignKey(p => p.SystemUserId)
+            //             .OnDelete(DeleteBehavior.NoAction);
             // });
 
             base.OnModelCreating(modelBuilder);

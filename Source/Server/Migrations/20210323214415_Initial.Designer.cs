@@ -9,8 +9,8 @@ using Refactorizando.Server;
 namespace Refactorizando.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210304150301_AddedUniqueKeyToRequestLikes")]
-    partial class AddedUniqueKeyToRequestLikes
+    [Migration("20210323214415_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -48,14 +48,14 @@ namespace Refactorizando.Server.Migrations
                         new
                         {
                             Id = "60c51d0e-6c24-4191-970b-aefb93fb9c51",
-                            ConcurrencyStamp = "05228e26-86f4-4731-ba49-d5bce39e87ce",
+                            ConcurrencyStamp = "ad2d8f32-0c7c-4957-a033-73310f5dac37",
                             Name = "admin",
                             NormalizedName = "admin"
                         },
                         new
                         {
                             Id = "adce8478-150e-4f7a-8dff-22bf15a0be0f",
-                            ConcurrencyStamp = "e5760d39-2de1-46f8-839f-d928e2a45859",
+                            ConcurrencyStamp = "51308929-5fd5-4f3b-87d3-969e87337248",
                             Name = "user",
                             NormalizedName = "user"
                         });
@@ -292,6 +292,9 @@ namespace Refactorizando.Server.Migrations
             modelBuilder.Entity("Refactorizando.Shared.Data.Models.SystemUser", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
+
+                    b.Property<bool>("IsEmailConfirmed")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("tinyint(1)");

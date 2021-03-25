@@ -42,19 +42,22 @@ namespace Refactorizando.Server.Controllers
             this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             this.mailingService = mailingService 
                 ?? throw new ArgumentNullException(nameof(mailingService));
+                
         }
 
         [HttpGet("")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll([FromQuery]QueryParameters parameters)
         {
             var userId = context.GetUserId();
             var query =  dbContext.Requests
-                .Skip((parameters.Page-1)*parameters.Count)
+                .Skip((parameters.Page - 1)*parameters.Count)
                 .Take(parameters.Count)
                 .OrderByDescending(k => k.CreatedOn);
 
             var items = await query
                 .Include(k => k.LikeRequests)
+                .Include(k => k.SystemUser)
                 .ToListAsync();
             var totalItemCount = query.Count();
             var totalPages = totalItemCount% parameters.Count + 1;
@@ -62,9 +65,13 @@ namespace Refactorizando.Server.Controllers
             foreach (var item in items)
             {
                 var mapped = mapper.Map<RequestDto>(item);
-                if (item.LikeRequests != null)
+                mapped.SystemUser.Email = null;
+                if (!string.IsNullOrEmpty(userId) 
+                        && item.LikeRequests != null)
                 {
-                    mapped.HasCurrentUserLike = item.LikeRequests.Any(k => k.SystemUserId == userId);
+                    mapped.HasCurrentUserLike = 
+                                    item.LikeRequests
+                                    .Any(k => k.SystemUserId == userId);
                     mapped.LikesCount = item.LikeRequests.Count;
                 }
                 responseItems.Add(mapped);

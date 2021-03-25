@@ -20,10 +20,10 @@
       {
         
           <div  class="row columns is-multiline">
-            @foreach (var item in myRequests)
+            @foreach (var item in myRequests.Values)
             {
-                <div  key="@(item.Id)" class="column is-4">
-                  <RequestItem User="User" Request="item"/>
+                <div key="@(item.Id)" class="column is-4">
+                  <RequestItem  Request="item"  UserName="@userName" UserProfileImageUrl="@profileUrl"/>
                 </div>
                 
             }
@@ -44,10 +44,6 @@
                 </div>
               </div>
           </div>
-        <div class="columns is-centered">
-          <div class="column has-text-centered is-2">
-          </div>
-        </div>
       }
     </div>
   </div>
@@ -62,34 +58,32 @@
   private string errorMessage;
   private bool isLoading;
 
-  private List<RequestDto> myRequests = new List<RequestDto>();
-  public SystemUserDto User { get; set; }
+  private DataSetResponse<RequestDto> myRequests = new DataSetResponse<RequestDto>();
+
+  private string userName;
+  private string profileUrl;
+
 
   protected override async Task OnParametersSetAsync()
   {
+      var userInformation = await AuthenticationState;
+      userName = userInformation.User.Claims.SingleOrDefault(k => k.Type == "UserName")?.Value;
+      profileUrl = userInformation.User.Claims.SingleOrDefault(k => k.Type == "ProfileImage")?.Value;
+
       await LoadMyRequests();
   }
 
   private async Task LoadMyRequests()
   {
     isLoading = true;
-    var userInfoResponse = await AuthService.GetUserInformation();
-    if (userInfoResponse.IsOkResponse())
+    var servicesResponse = await RequestService.GetMines(new QueryParameters(){Count = 10, Page = 1});
+    if (servicesResponse.IsOkResponse())
     {
-        User = userInfoResponse.Value;
-        var servicesResponse = await RequestService.GetMines();
-        if (servicesResponse.IsOkResponse())
-        {
-            myRequests = servicesResponse.Value;
-        }
-        else
-        {
-            Error(servicesResponse.Message);
-        }
+        myRequests = servicesResponse.Value;
     }
     else
     {
-      Error(userInfoResponse.Message);
+        Error(servicesResponse.Message);
     }
     isLoading = false;
   }

@@ -21,6 +21,9 @@ using Mabar.Cross.Images.Client.Services;
 using Mabar.Cross.Images.Client.Models;
 using AutoMapper;
 using Refactorizando.Shared.Data.Models.Dtos;
+using Mabar.Cross.Mailing.Client.Services;
+using Mabar.Cross.Mailing.Client.Models;
+using System.Net;
 
 namespace Refactorizando.Server.Controllers
 {
@@ -35,7 +38,9 @@ namespace Refactorizando.Server.Controllers
         private readonly IExecutionContext context;
         private readonly IMapper mapper;
         private readonly IImageGenerationService imageGenerationService;
+        private readonly IMailingService mailingService;
         private readonly ApplicationDbContext dbContext;
+    
 
         public AuthController(
                 ILogger<AuthController> logger,
@@ -45,6 +50,7 @@ namespace Refactorizando.Server.Controllers
                 IExecutionContext context,
                 IMapper mapper,
                 IImageGenerationService imageGenerationService,
+                IMailingService mailingService,
                 ApplicationDbContext dbContext)
         {
             this.logger = logger
@@ -61,6 +67,8 @@ namespace Refactorizando.Server.Controllers
                 ?? throw new ArgumentNullException(nameof(mapper));
             this.imageGenerationService = imageGenerationService 
                 ?? throw new ArgumentNullException(nameof(imageGenerationService));
+            this.mailingService = mailingService 
+                ?? throw new ArgumentNullException(nameof(mailingService));
             this.dbContext = dbContext
                 ?? throw new ArgumentNullException(nameof(dbContext));
         }
@@ -75,26 +83,42 @@ namespace Refactorizando.Server.Controllers
                 Email = model.Email,
                 Name = model.Name
             };
+            
 
             var result = await userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                var url = string.Empty; //TODO: default unknown image
+                var url = string.Empty; 
                 var profilePictureUrlRequest = await imageGenerationService
                     .GenerateProfilePicture(new ProfilePictureRequest(){
                         PictureType = ProfilePictureRequest.PictureTypes.CenteredOneInitial,
-                        Text = model.Name.ToLower(),
+                        Text = model.Name.ToUpper(),
                     });
                 if (profilePictureUrlRequest.IsOkResponse())
                 {
                     url = profilePictureUrlRequest.Value;
                 }
-                var userReturned = await dbContext.SystemUsers
-                                    .Where(k => k.Id == user.Id)
-                                    .FirstAsync();
-                userReturned.ProfileUrl = url;
+                user.ProfileUrl = url;
+                await userManager.AddToRoleAsync(user, "user");
+                var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+                var appEndpoint = configuration["APP_ENDPOINT"];
+                var emailTemplateValues = new Dictionary<string, object>(){
+                    {"name", user.Name}, 
+                    {"serviceName", "Refactor tool"}, 
+                    {"url", $"{appEndpoint}/email/validation?token={WebUtility.UrlEncode(confirmationToken)}&id={user.Id}"}};
+                await mailingService.SendEmailTemplate(new Email(){
+                    Subject = "[Refactoring] Email confirmation ✉️",
+                    To = new List<EmailAddress>(){
+                        new EmailAddress(){
+                            Email = user.Email,
+                            Name = user.Name
+                        }
+                    }
+                }, 
+                new Guid(Definitions.ConfirmationEmailTemplateId),
+                emailTemplateValues);
                 await dbContext.SaveChangesAsync();
-                return BuildToken(model.Email, user.Id, new List<string>());
+                return BuildToken(model.Email, user.Id, url, user.Name, new List<string>());
             }
             else
             {
@@ -111,10 +135,32 @@ namespace Refactorizando.Server.Controllers
             {
                 Email = HttpContext.User.Identity.Name
             };
-            var usuario = await userManager.FindByEmailAsync(userInfo.Email);
-            var roles = await userManager.GetRolesAsync(usuario);
-            return BuildToken(userInfo.Email, usuario.Id, roles);
+            var user = await userManager.FindByEmailAsync(userInfo.Email);
+            var roles = await userManager.GetRolesAsync(user);
+            return BuildToken(userInfo.Email, user.Id, user.ProfileUrl, user.Name, roles);
         }
+
+        [HttpPost("emailvalidation")]
+        public async Task<ActionResult<UserToken>> EmailValidation([FromQuery] string userId, [FromQuery]  string token)
+        {
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("Invalid validation email data");
+            }
+            var validationResult = await userManager.ConfirmEmailAsync(user, token);
+            if (validationResult.Succeeded)
+            {
+                user.EmailConfirmed = true;
+                await dbContext.SaveChangesAsync();
+                return Ok();
+            }
+            else
+            {
+                return BadRequest("Invalid validation token");
+            }
+        }
+
 
         [HttpPost("login")]
         public async Task<ActionResult<UserToken>> Login([FromBody] UserInfo userInfo)
@@ -124,9 +170,8 @@ namespace Refactorizando.Server.Controllers
             if (result.Succeeded)
             {
                 var user = await userManager.FindByEmailAsync(userInfo.Email);
-                //await dbContext.SaveChangesAsync();
                 var roles = await userManager.GetRolesAsync(user);
-                return BuildToken(userInfo.Email, user.Id, roles);
+                return BuildToken(userInfo.Email, user.Id, user.ProfileUrl, user.Name, roles);
             }
             else
             {
@@ -134,26 +179,17 @@ namespace Refactorizando.Server.Controllers
             }
         }
 
-        [HttpGet("users/current")]
-        public  async Task<IActionResult> GetUserInfo ()
-        {
-            var userId = context.GetUserId();
-            var user = await dbContext.SystemUsers.FirstOrDefaultAsync(k => k.Id == userId);
-            if (user == null)
-            {
-                return NotFound($"Can't find user withd Id={userId}");
-            }
-            var mapped = mapper.Map<SystemUserDto>(user);
-            return Ok(mapped);
-        } 
-        private UserToken BuildToken(string email, string userId, IList<string> roles)
+        private UserToken BuildToken(string email, string userId, string profileImage, string userName, IList<string> roles)
         {
             var claims = new List<Claim>()
             {
                 new Claim(JwtRegisteredClaimNames.UniqueName, email),
                 new Claim(ClaimTypes.Name, email),
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("ProfileImage", profileImage),
+                new Claim("UserName", userName),
+
             };
             foreach (var rol in roles)
             {

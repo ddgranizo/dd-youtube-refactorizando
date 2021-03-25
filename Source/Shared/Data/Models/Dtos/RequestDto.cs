@@ -5,11 +5,11 @@ namespace Refactorizando.Shared.Data.Models.Dtos
 {
     public class RequestDto
     {
+        
         public Guid Id { get; set; }
         public string RepositoryUri { get; set; }
         public string Description { get; set; }
         public string SystemUserId { get; set; }
-        public SystemUser SystemUser { get; set; }
         public DateTime CreatedOn { get; set; }
         public RequestStates State { get; set; }
         public RequestStateReasons StateReason { get; set; }
@@ -19,6 +19,7 @@ namespace Refactorizando.Shared.Data.Models.Dtos
         public int LikesCount { get; set; }
         public bool HasCurrentUserLike { get; set; }
 
+        public SystemUserDto SystemUser { get; set; }
         public bool HasVideo()  => !string.IsNullOrEmpty(VideoUrl);
 
         public string StateString()

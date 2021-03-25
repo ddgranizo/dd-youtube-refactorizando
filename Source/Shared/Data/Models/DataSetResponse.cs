@@ -13,7 +13,7 @@ namespace Refactorizando.Shared.Data.Models
 
         public DataSetResponse()
         {
-
+            Values = new List<T>();
         }
 
         public DataSetResponse(QueryParameters queryParameters)
@@ -23,8 +23,8 @@ namespace Refactorizando.Shared.Data.Models
                 throw new ArgumentNullException(nameof(queryParameters));
             }
 
-            Count = pagination.Count;
-            CurrentPage = pagination.Page;
+            Count = queryParameters.Count;
+            CurrentPage = queryParameters.Page;
         }
 
         public void SetValues(IEnumerable<T> values)

@@ -30,9 +30,14 @@ namespace Refactorizando.Client.Data.Services.Implementations
             return await httpManagerService.Post<SignUpRequest, UserToken>($"{ApiPath}/signup", request);
         }
 
-         public async Task<ObjectHttpResponse<SystemUserDto>> GetUserInformation()
+        // public async Task<ObjectHttpResponse<SystemUserDto>> GetUserInformation()
+        // {
+        //     return await httpManagerService.Get<SystemUserDto>($"{ApiPath}/users/current");
+        // }
+
+        public async Task<HttpResponse> ValideEmail(string userId, string token)
         {
-            return await httpManagerService.Get<SystemUserDto>($"{ApiPath}/users/current");
+            return await httpManagerService.Post($"{ApiPath}/emailvalidation?userId={userId}&token={token}");
         }
     }
 }

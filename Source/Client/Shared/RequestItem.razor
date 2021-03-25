@@ -5,11 +5,11 @@
         <div class="media">
         <div class="media-left">
             <figure class="image is-48x48">
-            <img src="@(User.ProfileUrl)" alt="Profile picture">
+            <img src="@(UserProfileImageUrl)" alt="Profile picture">
             </figure>
         </div>
             <div class="media-content">
-                <p class="title is-4 has-text-black">@(User.Name)</p>
+                <p class="title is-4 has-text-black">@(UserName)</p>
                 <p class="subtitle is-6 has-text-black">
                     <span class="icon">
                         <i class="mdi mdi-github"></i>
@@ -55,7 +55,8 @@
 
 @code {
     [Parameter] public RequestDto Request { get; set; }
-    [Parameter] public SystemUserDto User { get; set; }
+    [Parameter] public string UserName { get; set; }
+    [Parameter] public string UserProfileImageUrl { get; set; }
 
 
     private void Navigate(){
@@ -70,6 +71,7 @@
             Request.LikesCount++;
         }
     }
+    
     private async Task Dislike()
     {
         var response =   await LikeRequestsService.Dislike(Request.Id);
@@ -80,8 +82,8 @@
         }
     }
 
-     protected override void OnInitialized()
+    protected override void OnInitialized()
     {
-        Console.WriteLine(User.ProfileUrl);
+        
     }
 }   
