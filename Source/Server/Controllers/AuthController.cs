@@ -24,6 +24,7 @@ using Refactorizando.Shared.Data.Models.Dtos;
 using Mabar.Cross.Mailing.Client.Services;
 using Mabar.Cross.Mailing.Client.Models;
 using System.Net;
+using System.Web;
 
 namespace Refactorizando.Server.Controllers
 {
@@ -101,11 +102,13 @@ namespace Refactorizando.Server.Controllers
                 user.ProfileUrl = url;
                 await userManager.AddToRoleAsync(user, "user");
                 var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+                var secondResult = await userManager.ConfirmEmailAsync(user, confirmationToken);
                 var appEndpoint = configuration["APP_ENDPOINT"];
+                string codeHtmlVersion = HttpUtility.UrlEncode(confirmationToken);
                 var emailTemplateValues = new Dictionary<string, object>(){
                     {"name", user.Name}, 
                     {"serviceName", "Refactor tool"}, 
-                    {"url", $"{appEndpoint}/email/validation?token={WebUtility.UrlEncode(confirmationToken)}&id={user.Id}"}};
+                    {"url", $"{appEndpoint}/email/validation?token={codeHtmlVersion}&id={user.Id}"}};
                 await mailingService.SendEmailTemplate(new Email(){
                     Subject = "[Refactoring] Email confirmation ✉️",
                     To = new List<EmailAddress>(){
@@ -141,7 +144,7 @@ namespace Refactorizando.Server.Controllers
         }
 
         [HttpPost("emailvalidation")]
-        public async Task<ActionResult<UserToken>> EmailValidation([FromQuery] string userId, [FromQuery]  string token)
+        public async Task<ActionResult<UserToken>> EmailValidation([FromQuery] string userId, [FromQuery] string token)
         {
             var user = await userManager.FindByIdAsync(userId);
             if (user == null)
@@ -151,7 +154,6 @@ namespace Refactorizando.Server.Controllers
             var validationResult = await userManager.ConfirmEmailAsync(user, token);
             if (validationResult.Succeeded)
             {
-                user.EmailConfirmed = true;
                 await dbContext.SaveChangesAsync();
                 return Ok();
             }
