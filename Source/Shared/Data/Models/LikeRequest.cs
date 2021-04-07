@@ -7,9 +7,9 @@ namespace Refactorizando.Shared.Data.Models
 {
     public class LikeRequest
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid Id { get; set; }
+        // [Key]
+        // [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        // public Guid Id { get; set; }
         public string SystemUserId { get; set; }
         public SystemUser SystemUser { get; set; }
         public Guid RequestId { get; set; }

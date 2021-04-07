@@ -14,6 +14,8 @@ namespace Refactorizando.Client.Data.Services {
         Task<ObjectHttpResponse<Guid>> Create(RequestDto request);
         Task<HttpResponse> Update(Guid id, RequestDto request);
         Task<HttpResponse> Delete(Guid id);
+        Task<HttpResponse> UpdateState(Guid id, int state);
+        Task<HttpResponse> UpdateStateReason(Guid id, int stateReason);
     }
 }
 

@@ -105,3 +105,11 @@ a, .btn-link {
 -webkit-line-clamp: 10;
 }
       
+
+
+.loading-bar-container {
+    position: fixed;
+    width: 80%;
+    top: 50%;
+    left: 10%;
+}

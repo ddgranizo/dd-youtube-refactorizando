@@ -1,0 +1,48 @@
+<div class="modal @DialogModalClass">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">@Title</p>
+            <button class="delete" aria-label="close" @onclick="Close"></button>
+        </header>
+        <section class="modal-card-body">
+            <div class="field">
+                <label class="label">@Title</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="Text input" @bind="@InitialValue">
+                </div>
+            </div>
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button" @onclick="Close">Cancel</button>
+            <button class="button is-success" @onclick="Confirm">Confirm</button>
+
+        </footer>
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string Title { get; set; }
+    [Parameter] public string Label { get; set; }  
+    [Parameter] public string InitialValue { get; set; }  
+
+    [Parameter] public EventCallback OnClosedDialog { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+
+    private string DialogModalClass => IsOpen ? "is-active" : "";
+
+    private async Task Close(){
+        await OnClosedDialog.InvokeAsync(null);
+    }
+    private async Task Confirm(){
+        await OnConfirm.InvokeAsync(null);
+    }
+
+    public string GetInputValue()
+    {
+        return InitialValue;
+    }
+}

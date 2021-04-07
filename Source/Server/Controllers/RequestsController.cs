@@ -8,6 +8,7 @@ using Mabar.Cross.Mailing.Client.Models;
 using Mabar.Cross.Mailing.Client.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -27,6 +28,7 @@ namespace Refactorizando.Server.Controllers
         private readonly ApplicationDbContext dbContext;
         private readonly IExecutionContext context;
         private readonly IMapper mapper;
+        private readonly UserManager<SystemUser> userManager;
         private readonly IMailingService mailingService;
 
         public RequestsController(
@@ -34,12 +36,14 @@ namespace Refactorizando.Server.Controllers
             ApplicationDbContext dbContext,
             IExecutionContext context,
             IMapper mapper,
+            UserManager<SystemUser> userManager,
             IMailingService mailingService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             this.context = context ?? throw new ArgumentNullException(nameof(context));
             this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             this.mailingService = mailingService 
                 ?? throw new ArgumentNullException(nameof(mailingService));
                 
@@ -59,8 +63,10 @@ namespace Refactorizando.Server.Controllers
                 .Include(k => k.LikeRequests)
                 .Include(k => k.SystemUser)
                 .ToListAsync();
-            var totalItemCount = query.Count();
-            var totalPages = totalItemCount% parameters.Count + 1;
+            var totalItemCount = dbContext.Requests.Count();
+            var remainder = totalItemCount % parameters.Count;
+            var extraPage = remainder == 0 ? 0 : 1;
+            var totalPages = (int)(totalItemCount / parameters.Count) + extraPage;
             var responseItems = new List<RequestDto>();
             foreach (var item in items)
             {
@@ -80,6 +86,7 @@ namespace Refactorizando.Server.Controllers
                 Values = responseItems,
                 TotalCount = totalItemCount,
                 TotalPages = totalPages,
+            
             };
             return Ok(response);
         }
@@ -89,16 +96,18 @@ namespace Refactorizando.Server.Controllers
         {
             var userId = context.GetUserId();
             var query =  dbContext.Requests
+                .Where(k => k.SystemUserId == userId)
                 .Skip((parameters.Page-1)*parameters.Count)
                 .Take(parameters.Count)
-                .OrderByDescending(k => k.CreatedOn)
-                .Where(k => k.SystemUserId == userId);
+                .OrderByDescending(k => k.CreatedOn);
 
             var items = await query
                 .Include(k => k.LikeRequests)
                 .ToListAsync();
-            var totalItemCount = query.Count();
-            var totalPages = totalItemCount% parameters.Count + 1;
+            var totalItemCount = dbContext.Requests.Where(k => k.SystemUserId == userId).Count();
+            var remainder = totalItemCount % parameters.Count;
+            var extraPage = remainder == 0 ? 0 : 1;
+            var totalPages = (int)(totalItemCount / parameters.Count) + extraPage;
             var responseItems = new List<RequestDto>();
             foreach (var item in items)
             {
@@ -122,6 +131,11 @@ namespace Refactorizando.Server.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] RequestDto data)
         {
             var userId = context.GetUserId();
+            var user = await userManager.FindByIdAsync(userId);
+            if (!user.EmailConfirmed)
+            {
+                return BadRequest("The user need to confirm email address before create any request");
+            }
             var record = await dbContext.Requests.FirstOrDefaultAsync(k => k.Id == id);
             if (record == null)
             {
@@ -133,6 +147,41 @@ namespace Refactorizando.Server.Controllers
             }
             record.RepositoryUri = data.RepositoryUri;
             record.Description = data.Description;
+
+            if (context.UserHasRole("admin"))
+            {
+                record.Comments = data.Comments;
+                record.VideoUrl = data.VideoUrl;
+            }
+            await dbContext.SaveChangesAsync();
+            return Ok();
+        }
+
+
+        [HttpPut("{id}/state/{state}")]
+        [Authorize(Roles= "admin")]
+        public async Task<IActionResult> UpdateState(Guid id, int state)
+        {
+            var record = await dbContext.Requests.FirstOrDefaultAsync(k => k.Id == id);
+            if (record == null)
+            {
+                return NotFound();
+            }
+            record.State = (Shared.Data.Models.Request.RequestStates)state;
+            await dbContext.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPut("{id}/statereason/{stateReason}")]
+        [Authorize(Roles= "admin")]
+        public async Task<IActionResult> UpdateStateReason(Guid id, int stateReason)
+        {
+            var record = await dbContext.Requests.FirstOrDefaultAsync(k => k.Id == id);
+            if (record == null)
+            {
+                return NotFound();
+            }
+            record.StateReason = (Shared.Data.Models.Request.RequestStateReasons)stateReason;
             await dbContext.SaveChangesAsync();
             return Ok();
         }
@@ -141,6 +190,11 @@ namespace Refactorizando.Server.Controllers
         public async Task<IActionResult> Create(RequestDto data)
         {
             var userId = context.GetUserId();
+            var user = await userManager.FindByIdAsync(userId);
+            if (!user.EmailConfirmed)
+            {
+                return BadRequest("The user need to confirm email address before create any request");
+            }
             data.Id = Guid.Empty;
             data.CreatedOn = DateTime.Now;
             data.SystemUserId = userId;
@@ -153,6 +207,7 @@ namespace Refactorizando.Server.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> Get(Guid id)
         {
             var userId = context.GetUserId();

@@ -1,9 +1,10 @@
 @page "/requests/new"
 @page "/requests/{Id}"
+@using System.Security.Claims
 @inject IRequestService RequestService
 @inject NavigationManager NavigationManager
 
-<section class="hero is-medium is-link">
+<section class="hero is-medium">
   <div class="hero-body">
     <p class="title">
       @(isCreatingMode ? "New request" : "Request info")
@@ -18,31 +19,70 @@
       }
       else
       {
-        <EditForm Model="request">
           <div class="buttons">
-            <button class="button" aria-controls="dropdown-menu" @onclick="NavigateToRequests">
-                <span class="icon is-small">
-                    <i class="mdi mdi-arrow-left-bold" aria-hidden="true"></i>
-                </span>
-                <span>My requests</span>
-            </button>
-            @* @if (request.SystemUserId == )
+            @if (isMyRequest || isAdminUser)
             {
-                
-            } *@
-            <button class="button" aria-controls="dropdown-menu" @onclick="Save">
-                <span class="icon is-small">
-                    <i class="mdi mdi-content-save" aria-hidden="true"></i>
-                </span>
-                <span>Save</span>
-            </button>
-            <button class="button" aria-controls="dropdown-menu" @onclick="(k => isConfirmOpen = true)">
-                <span class="icon is-small">
-                    <i class="mdi mdi-delete" aria-hidden="true"></i>
-                </span>
-                <span>Delete</span>
-            </button>
+                <button class="button" aria-controls="dropdown-menu" @onclick="NavigateToRequests">
+                    <span class="icon is-small">
+                        <i class="mdi mdi-arrow-left-bold" aria-hidden="true"></i>
+                    </span>
+                    <span>My requests</span>
+                </button>
+                <button class="button" aria-controls="dropdown-menu" @onclick="Save">
+                    <span class="icon is-small">
+                        <i class="mdi mdi-content-save" aria-hidden="true"></i>
+                    </span>
+                    <span>Save</span>
+                </button>
+                <button class="button" aria-controls="dropdown-menu" @onclick="(k => isConfirmOpen = true)">
+                    <span class="icon is-small">
+                        <i class="mdi mdi-delete" aria-hidden="true"></i>
+                    </span>
+                    <span>Delete</span>
+                </button>
+
+                 <AuthorizeView Roles="admin">
+                    <button class="button" aria-controls="dropdown-menu" @onclick="(k => isInputStateOpen = true)">
+                        <span class="icon is-small">
+                            <i class="mdi mdi-playlist-check" aria-hidden="true"></i>
+                        </span>
+                        <span>Update state</span>
+                    </button>
+                    @if (request.State == Request.RequestStates.Rejected)
+                    {
+                        <button class="button" aria-controls="dropdown-menu" @onclick="(k => isInputStateReasonOpen = true)">
+                          <span class="icon is-small">
+                              <i class="mdi mdi-playlist-check" aria-hidden="true"></i>
+                          </span>
+                          <span>Update state reason</span>
+                      </button>
+                    }
+                </AuthorizeView>
+            }
+            else
+            {
+              @if(isCreatingMode)
+              {
+                <button class="button" aria-controls="dropdown-menu" @onclick="Save">
+                    <span class="icon is-small">
+                        <i class="mdi mdi-content-save" aria-hidden="true"></i>
+                    </span>
+                    <span>Save</span>
+                </button>
+              }
+              else
+              {
+                  <button class="button" aria-controls="dropdown-menu" @onclick="NavigateHome">
+                      <span class="icon is-small">
+                          <i class="mdi mdi-arrow-left-bold" aria-hidden="true"></i>
+                      </span>
+                      <span>Home</span>
+                  </button>
+              }
+            }
           </div>
+
+        <EditForm Model="request">
           <div class="field">
             <label class="label">Repository URL (git based and public)</label>
             <div class="control">
@@ -52,9 +92,61 @@
           <div class="field">
             <label class="label">Description. Please, tell my why this repository needs a refactor</label>
             <div class="control">
-              <InputTextArea  class="textarea" @bind-Value="request.Description"></InputTextArea>
+              <InputTextArea  class="textarea" style="min-height: 300px;" @bind-Value="request.Description"></InputTextArea>
             </div>
           </div>
+          @if (!isCreatingMode)
+          {
+               <div class="field">
+                <label class="label">State</label>
+                <div class="control">
+                  <input type="text"  class="input" value="@request.State.ToString()" readonly/>
+                </div>
+              </div>
+          }
+          
+          @if (request.State == Request.RequestStates.Rejected)
+          {
+              <div class="field">
+                <label class="label">Reason state</label>
+                <div class="control">
+                  <input  class="input" value="@request.StateReason" readonly/>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Comments</label>
+                <div class="control">
+                  <InputTextArea  class="textarea" style="min-height: 200px;" @bind-Value="request.Comments"></InputTextArea>
+                </div>
+              </div>
+          }
+          @if (request.State == Request.RequestStates.Accepted)
+          {
+              <div class="field">
+                <label class="label">Youtube URL video</label>
+                <span >Video (coming soon)</span>
+              </div>
+          }
+
+          @if (request.State == Request.RequestStates.Completed)
+          {
+              @if (isAdminUser)
+              {
+                  <div class="field">
+                    <label class="label">Video URL</label>
+                    <div class="control">
+                      <InputText  class="input" @bind-Value="request.VideoUrl" />
+                    </div>
+                </div>
+              }
+              
+
+              <div class="field">
+                <label class="label">Youtube URL video</label>
+                <a href="@request.VideoUrl" target="_blank">Video</a>
+              </div>
+          }
         </EditForm>
       }
       
@@ -66,26 +158,42 @@
 <ErrorDialog IsError="@isError" ErrorMessage="@errorMessage" OnClosedDialog="(k=>isError = false)"></ErrorDialog>
 <InfoDialog IsOpen="@isDialogOpen" Message="@dialogMessage" OnClosedDialog="(k=>isDialogOpen = false)" Title="Info"></InfoDialog>
 <ConfirmDialog ConfirmButtonStyle="is-danger" IsOpen="isConfirmOpen" Message="The request will be removed. Confirm?" OnCancelDialog="(k => isConfirmOpen = false)" OnConfirmDialog="OnConfirmDelete" />
+<InputSelectEnumDialog @ref="stateRef" Type="Request.RequestStates" InitialValue="request?.State ?? Request.RequestStates.Pending" Title="Update state" OnClosedDialog="(k => isInputStateOpen = false)" OnConfirm="OnConfirmInputStateDialog" IsOpen="isInputStateOpen"></InputSelectEnumDialog>
+<InputSelectEnumDialog @ref="stateReasonRef" Type="Request.RequestStateReasons" InitialValue="request?.StateReason ?? Request.RequestStateReasons.Pending" Title="Update state reason" OnClosedDialog="(k => isInputStateReasonOpen = false)" OnConfirm="OnConfirmInputStateReasonDialog" IsOpen="isInputStateReasonOpen"></InputSelectEnumDialog>
 
 @code{
-  [Parameter] public string Id { get; set; }
 
+  
+  [Parameter] public string Id { get; set; }
   private bool isConfirmOpen;
+  private bool isInputStateOpen;
+  private bool isInputStateReasonOpen;
 
   private Guid requestId;
   private bool isCreatingMode;
-
   private bool isError = false;
   private string errorMessage;
   private bool isDialogOpen = false;
   private string dialogMessage;
   private bool isLoading;
   private RequestDto request = new RequestDto();
+  private bool isMyRequest;
+  private bool isAdminUser;
+  InputSelectEnumDialog<Request.RequestStates> stateRef;
+  InputSelectEnumDialog<Request.RequestStateReasons> stateReasonRef;
+  [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
+
 
   private void NavigateToRequests()
   {
     NavigationManager.NavigateTo("/requests");
   }
+
+  private void NavigateHome()
+  {
+    NavigationManager.NavigateTo("/");
+  }
+
   private async Task Save()
   {
     isLoading = true;
@@ -95,6 +203,9 @@
         if (response.IsOkResponse())
         {
           Info("Changes saved!");
+          isMyRequest=true;
+          isCreatingMode = false;
+          NavigationManager.NavigateTo($"/requests/{response.Value}");
         }
         else
         {
@@ -107,6 +218,8 @@
         if (response.IsOkResponse())
         {
           Info("Changes saved!");
+          NavigationManager.NavigateTo($"/requests/{requestId}");
+
         }
         else
         {
@@ -116,28 +229,67 @@
     isLoading = false;
   }
 
-
-  protected override async Task OnInitializedAsync()
-  {
+  protected override async Task OnParametersSetAsync(){
       isCreatingMode = true;
       if (!string.IsNullOrEmpty(Id)
             && Guid.TryParse(Id, out requestId))
       {
-          isLoading = true;
-          isCreatingMode = false;
-          var response = await RequestService.Get(requestId);
-          if (response.IsOkResponse())
-          {
-            request = response.Value;
-          }
-          else
-          {
-            Error(response.Message);
-          }
-          isLoading = false;
+         await LoadRequest(requestId);
       }
   }
 
+  private async Task LoadRequest(Guid id){
+      isLoading = true;
+      isCreatingMode = false;
+      var userInformation = await AuthenticationState;
+      var userId = userInformation.User.Claims.SingleOrDefault(k => k.Type == ClaimTypes.NameIdentifier)?.Value;
+      isAdminUser = userInformation.User.Claims.Any(k => k.Type == ClaimTypes.Role && k.Value == "admin");
+      var response = await RequestService.Get(id);
+      if (response.IsOkResponse())
+      {
+        request = response.Value;
+        isMyRequest = request.SystemUserId == userId;
+      }
+      else
+      {
+        Error(response.Message);
+      }
+      isLoading = false;
+  }
+  private async Task OnConfirmInputStateDialog()
+  {
+      isInputStateOpen = false;
+      isLoading = true;
+      var response = await RequestService.UpdateState(requestId, (int)stateRef.GetInputValue());
+      if (response.IsOkResponse())
+      {
+        isConfirmOpen = false;
+        NavigationManager.NavigateTo($"/requests/{requestId}");
+      }
+      else
+      {
+        Error(response.Message);
+      }
+      isLoading = false;
+  }
+
+  private async Task OnConfirmInputStateReasonDialog()
+  {
+      isInputStateReasonOpen = false;
+      isLoading = true;
+      var response = await RequestService.UpdateStateReason(requestId, (int)stateReasonRef.GetInputValue());
+      if (response.IsOkResponse())
+      {
+        isConfirmOpen = false;
+        NavigationManager.NavigateTo($"/requests/{requestId}");
+      }
+      else
+      {
+        Error(response.Message);
+      }
+      isLoading = false;
+
+  }
 
   private async Task OnConfirmDelete()
   {

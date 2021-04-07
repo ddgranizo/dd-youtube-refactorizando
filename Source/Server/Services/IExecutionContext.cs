@@ -7,5 +7,7 @@ namespace Refactorizando.Server.Services
     public interface IExecutionContext
     {
         string GetUserId();
+        List<string> GetUserRoles();
+        bool UserHasRole(string role);
     }
 }

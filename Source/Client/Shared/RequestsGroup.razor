@@ -1,0 +1,153 @@
+@inject IRequestService RequestService
+
+@if (isLoading)
+{
+    <Loading />
+}
+else
+{
+    @if (dataSet == null)
+    {
+        <div>Invalid Dataset</div>
+    }
+    else
+    {
+        @if (dataSet.Values.Count() > 0)
+        {
+            <div class="row columns is-multiline">
+            @foreach (var item in dataSet.Values)
+            {
+                <div key="@(item.Id)" class="column is-4">
+                    <RequestItem 
+                        Request="item" 
+                        UserProfileImageUrl="@(ProfilePictureHandler.Invoke(item))"
+                        UserName="@(UsernameHandler.Invoke(item))" />
+                </div>
+            }
+            
+            @if (ShowAddNew)
+            { 
+                <div class="column is-4">
+                    <div class="card" style="height: 100%;">
+                        <div class="card-content"  style="height: 100%;">
+                            <div class="columns has-text-centered is-vcentered"  style="height: 100%;">
+                            <div class="column " style="padding-top: 30px;">
+                                <a href="/requests/new" class="is-size-4" >
+                                <span class="icon is-small">
+                                    <i class="mdi mdi-plus" aria-hidden="true"></i>
+                                </span>
+                                <span>Create new request!</span>
+                                </a>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            }
+            </div>
+
+            <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+                @if (dataSet.CurrentPage > 1)
+                {
+                    <a class="pagination-previous" @onclick="NavigateBack">Previous</a>
+                }
+                @if (dataSet.CurrentPage < dataSet.TotalPages)
+                {
+                    <a class="pagination-next" @onclick="NavigateNext">Next page</a>
+                }
+                <ul class="pagination-list">
+                @for (int i = 1; i <= dataSet.TotalPages; i++)
+                {
+                    var iReference = i;
+                    <li><a class="pagination-link @classIsCurrent(i)" aria-label="Goto page @i" @onclick="(async k => await NavigateToPage(iReference))">@i</a></li>
+                }
+                </ul>
+            </nav>
+        }
+        else
+        {
+            @if (ShowAddNew)
+            { 
+                <div class="column">
+                    <div class="card" style="height: 200px">
+                        <div class="card-content"  style="height: 100%;">
+                            <div class="columns has-text-centered is-vcentered"  style="height: 100%;">
+                            <div class="column " style="padding-top: 30px;">
+                                <a href="/requests/new" class="is-size-4" >
+                                <span class="icon is-small">
+                                    <i class="mdi mdi-plus" aria-hidden="true"></i>
+                                </span>
+                                <span>Create new request!</span>
+                                </a>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            }
+            else{
+                <div>Zero records</div>
+            }
+        }
+        
+    }
+}
+ 
+<ErrorDialog IsError="@isError" ErrorMessage="@errorMessage" OnClosedDialog="(k=>isError = false)"></ErrorDialog>
+
+@code{
+
+    [Parameter] public bool ShowAddNew { get; set; }
+    [Parameter] public Func<RequestDto, string> ProfilePictureHandler { get; set; }
+    [Parameter] public Func<RequestDto, string> UsernameHandler { get; set; }
+    [Parameter] public Func<int, Task<ObjectHttpResponse<DataSetResponse<RequestDto>>>> LoadDataHandler { get; set; }
+    private bool isError = false;
+    private string errorMessage;
+    private DataSetResponse<RequestDto> dataSet { get; set; }
+    private bool isLoading;
+
+    private string classIsCurrent(int i) => i == dataSet.CurrentPage ? "is-current" : "";
+
+    private  async Task NavigateNext()
+    {
+        var nextPage = dataSet.CurrentPage + 1;
+        await LoadRequests(nextPage);
+    }
+
+    private  async Task NavigateBack()
+    {
+        var previousPage = dataSet.CurrentPage -1;
+        await LoadRequests(previousPage);
+    }
+
+    private  async Task NavigateToPage(int page)
+    {
+        await LoadRequests(page);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequests(dataSet?.CurrentPage ?? 1);
+    }
+    
+    private async Task LoadRequests(int page)
+    {
+        isLoading = true;
+        var servicesResponse = await LoadDataHandler.Invoke(page);
+        if (servicesResponse.IsOkResponse())
+        {
+            dataSet = servicesResponse.Value;
+        }
+        else
+        {
+            Error(servicesResponse.Message);
+        }
+        isLoading = false;
+    }
+
+    private void Error(string message)
+    {
+        isError = true;
+        errorMessage = message;
+    }
+}    

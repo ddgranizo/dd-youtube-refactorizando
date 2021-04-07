@@ -44,6 +44,16 @@ namespace Refactorizando.Client.Data.Services.Implementations
             return await httpManagerService.Put($"{ApiPath}/{id}", request);
         }
 
+        public async Task<HttpResponse> UpdateState(Guid id, int state)
+        {
+            return await httpManagerService.Put($"{ApiPath}/{id}/state/{state}", new{});
+        }
+
+        public async Task<HttpResponse> UpdateStateReason(Guid id, int stateReason)
+        {
+            return await httpManagerService.Put($"{ApiPath}/{id}/statereason/{stateReason}", new{});
+        }
+
         public async Task<HttpResponse> Delete(Guid id)
         {
             return await httpManagerService.Delete($"{ApiPath}/{id}");

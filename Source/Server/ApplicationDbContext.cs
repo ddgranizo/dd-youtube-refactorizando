@@ -36,19 +36,6 @@ namespace Refactorizando.Server
                 entity.HasKey(p =>  new {p.RequestId, p.SystemUserId});
             });
 
-            // modelBuilder.Entity<LikeRequest>(entity => {
-            //     entity.HasOne(p => p.Request)
-            //             .WithMany(p => p.LikeRequests)
-            //             .HasForeignKey(p => p.RequestId)
-            //             .OnDelete(DeleteBehavior.NoAction);
-            // });
-            // modelBuilder.Entity<LikeRequest>(entity => {
-            //     entity.HasOne(p => p.SystemUser)
-            //             .WithMany(p => p.LikeRequests)
-            //             .HasForeignKey(p => p.SystemUserId)
-            //             .OnDelete(DeleteBehavior.NoAction);
-            // });
-
             base.OnModelCreating(modelBuilder);
         }
 

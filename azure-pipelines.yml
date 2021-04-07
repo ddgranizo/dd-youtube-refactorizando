@@ -1,0 +1,44 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  folder: 'Source/Server'
+  projectTarget: '$(folder)/Refactorizando.Server.csproj'
+  buildConfiguration: 'Release'
+  coreCliVersion: 5.0.100
+
+steps:
+
+- task: DotNetCoreInstaller@1
+  displayName: 'Installing NetCore version $(coreCliVersion)...'
+  inputs:
+    version: $(coreCliVersion)
+
+
+- task: NuGetCommand@2
+  displayName: 'NuGet authenticate'
+  inputs:
+    command: custom
+    arguments: sources update -Name "mabar-cross-feed" -Username "daniel.diaz@mabartech.com" -Password "$(System.AccessToken)" -StorePasswordInClearText -ConfigFile $(folder)/nuget.config
+
+
+- script: |
+    dotnet publish $(projectTarget) -c $(buildConfiguration)
+  displayName: 'DotNet Publish'
+
+
+- task: DockerInstaller@0
+  inputs:
+    dockerVersion: '17.09.0-ce'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: 'Docker hub / Mabar'
+    repository: 'mabartech/dd-youtube-refactorizando'
+    command: 'buildAndPush'
+    buildContext: '**'
+    Dockerfile: '**/Dockerfile'
+    tags: 'v$(Build.BuildId)'

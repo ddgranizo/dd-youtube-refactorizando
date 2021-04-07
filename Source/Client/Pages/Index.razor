@@ -1,137 +1,60 @@
 ﻿@page "/"
 @inject IRequestService RequestService
 
-<section class="hero is-link is-fullheight">
-    <div class="hero-body">
-      <div  class="row columns is-multiline">
-          @foreach (var item in requests.Values)
-          {
-              <div key="@(item.Id)" class="column is-4">
-                <RequestItem Request="item" 
-                            UserProfileImageUrl="@(item.SystemUser.ProfileUrl)"
-                            UserName="@(item.SystemUser.Name)"/>
-              </div>
-          }
-        </div>
-      @* <div class="container">
-        <div class="columns  is-vcentered reverse-columns">
-          <div class="column
-          is-10-mobile is-offset-1-mobile
-          is-10-tablet is-offset-1-tablet
-          is-5-desktop is-offset-1-desktop
-          is-5-widescreen is-offset-1-widescreen
-          is-5-fullhd is-offset-1-fullhd" data-aos="fade-down">
-            <h1 class="title titled is-1 mb-6">
-              absurd illustrations that make sense
-            </h1>
-            <h2 class=" subtitled subtitle has-text-grey is-4 has-text-weight-normal is-family-sans-serif">
-              Lorem ipsum, dolor sit amet consectetur adipisicing elit. Laborum cupiditate dolorum vitae dolores
-              nesciunt totam magni quas.
-            </h2>
-            <div class="buttons">
-              <button class="button is-black">Download</button>
-              <button class="button">Subscribe</button>
-            </div>
-          </div>
-          <div data-aos="fade-right" class="column
-            is-10-mobile is-offset-1-mobile
-            is-10-tablet is-offset-1-tablet
-            is-4-desktop is-offset-1-desktop
-            is-4-widescreen is-offset-1-widescreen
-            is-4-fullhd is-offset-1-fullhd">
-            <figure class="image is-square">
-              <img src="images/coding.png">
-            </figure>
-          </div>
-
-        </div>
-
-        
-      </div> *@
+<section class="hero is-medium">
+  <div class="hero-body">
+    <div>
+        <RequestsGroup 
+          ShowAddNew="false" 
+          ProfilePictureHandler="(k => k.SystemUser.ProfileUrl)" 
+          UsernameHandler="(k => k.SystemUser.Name)"
+          LoadDataHandler="(page => RequestService.GetAll(new QueryParameters() { Count = 9, Page = page }))"></RequestsGroup>
     </div>
-  </section>
-  
+  </div>
+</section>
 
-<section class="hero">
-    <div class="hero-body">
-      <div class="container">
-        
-        <section class="info-tiles">
-            <div class="tile is-ancestor has-text-centered">
-                <div class="tile is-parent">
-                    <article class="tile is-child box">
-                        <p class="title black">439k</p>
-                        <p class="subtitle black">Users</p>
-                    </article>
-                </div>
-                <div class="tile is-parent">
-                    <article class="tile is-child box">
-                        <p class="title black">59k</p>
-                        <p class="subtitle black">Products</p>
-                    </article>
-                </div>
-                <div class="tile is-parent">
-                    <article class="tile is-child box">
-                        <p class="title black">3.4k</p>
-                        <p class="subtitle black">Open Orders</p>
-                    </article>
-                </div>
-                <div class="tile is-parent">
-                    <article class="tile is-child box">
-                        <p class="title black">19</p>
-                        <p class="subtitle black">Exceptions</p>
-                    </article>
-                </div>
-            </div>
-        </section>
 
-        
-      </div>
+@* <section class="hero">
+  <div class="hero-body">
+    <div class="container">
+
+      <section class="info-tiles">
+        <div class="tile is-ancestor has-text-centered">
+          <div class="tile is-parent">
+            <article class="tile is-child box">
+              <p class="title black">439k</p>
+              <p class="subtitle black">Users</p>
+            </article>
+          </div>
+          <div class="tile is-parent">
+            <article class="tile is-child box">
+              <p class="title black">59k</p>
+              <p class="subtitle black">Products</p>
+            </article>
+          </div>
+          <div class="tile is-parent">
+            <article class="tile is-child box">
+              <p class="title black">3.4k</p>
+              <p class="subtitle black">Open Orders</p>
+            </article>
+          </div>
+          <div class="tile is-parent">
+            <article class="tile is-child box">
+              <p class="title black">19</p>
+              <p class="subtitle black">Exceptions</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
     </div>
-  </section>
-<ErrorDialog IsError="@isError" ErrorMessage="@errorMessage" OnClosedDialog="(k=>isError = false)"></ErrorDialog>
-
-  
+  </div>
+</section> *@
 
 @code {
-  private DataSetResponse<RequestDto> requests = new DataSetResponse<RequestDto>();
-  private bool isLoading;
-
-  private bool isError = false;
-  private string errorMessage;
   protected override async Task OnParametersSetAsync()
   {
-      await LoadMyRequests();
+   
   }
 
-  private async Task LoadMyRequests()
-  {
-    isLoading = true;
-    var servicesResponse = await RequestService.GetAll(new QueryParameters(){Count = 10, Page = 1});
-    if (servicesResponse.IsOkResponse())
-    {
-        requests = servicesResponse.Value;
-    }
-    else
-    {
-        Error(servicesResponse.Message);
-    }
-    @* var userInfoResponse = await AuthService.GetUserInformation();
-    if (userInfoResponse.IsOkResponse())
-    {
-        User = userInfoResponse.Value;
-        
-    }
-    else
-    {
-      Error(userInfoResponse.Message);
-    } *@
-    isLoading = false;
-  }
-
-  private void Error(string message)
-  {
-      isError = true;
-      errorMessage = message;
-  }
 }

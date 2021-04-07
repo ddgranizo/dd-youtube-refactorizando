@@ -23,10 +23,11 @@
                 <NavLink class="navbar-item" href="/" ActiveClass="is-active" Match="NavLinkMatch.All">
                     <span>Home</span> 
                 </NavLink>
-               
-                <NavLink class="navbar-item" href="/requests" ActiveClass="is-active" Match="NavLinkMatch.All">
-                    <span>Requests</span> 
-                </NavLink>
+                <AuthorizeView>
+                    <NavLink class="navbar-item" href="/requests" ActiveClass="is-active" Match="NavLinkMatch.All">
+                    <span>My requests</span> 
+                    </NavLink>
+                </AuthorizeView>
                
                 
                 </div>
@@ -34,30 +35,22 @@
                 <div class="navbar-end">
                     @if (isAuth)
                     {
-                        <div class="buttons">
-                            <a class="button" href="https://github.com/ddgranizo/dd-youtube-refactorizando" target="_blank">
+                        <a class="navbar-item" >
+                            <span>@authIdentity</span> 
+                        </a>
+                         <a class="navbar-item" href="#">
+                            <span class="icon-text has-text-white is-clickable"  @onclick="Logout">
                                 <span class="icon">
-                                <i class="mdi mdi-github"></i>
+                                    <i class="mdi mdi-logout"></i>
                                 </span>
-                            </a>
-                          
-                            <button class="button" @onclick="Logout">
-                                <span class="icon">
-                                <i class="mdi mdi-logout"></i>
-                                </span>
-                                <span>@authIdentity</span>
-                            </button>
-                        </div>
+                                <span>Logout</span>
+                            </span>
+                        </a>
                     }
                     else
                     {
                         <div class="buttons">
-                            <a class="button" href="https://github.com/ddgranizo/dd-youtube-refactorizando" target="_blank">
-                                <span class="icon">
-                                <i class="mdi mdi-github"></i>
-                                </span>
-                            </a>
-                            <a class="button is-primary" href="/signup">
+                            <a class="button is-warning" href="/signup">
                                 <strong>Sign up</strong>
                             </a>
                             <a class="button is-light" href="/login">
@@ -88,11 +81,17 @@
                         <span>Home</span> 
                     </NavLink>
                     </li>
-                    <li>
-                    <NavLink class="navbar-item" href="/requests" ActiveClass="is-active" Match="NavLinkMatch.All">
-                        <span>Requests</span> 
-                    </NavLink>
-                    </li>
+                    
+                    @if (isAuth)
+                    {
+                        <li>
+                        <NavLink class="navbar-item" href="/requests" ActiveClass="is-active" Match="NavLinkMatch.All">
+                            <span>My requests</span> 
+                        </NavLink>
+                        </li> 
+                    }
+                            
+                    
                 </ul>
                  <p class="menu-label">
                     Account
@@ -109,7 +108,7 @@
                     else
                     {
                         <div class="buttons">
-                            <a class="button is-primary" href="/signup">
+                            <a class="button is-warning" href="/signup">
                                 <strong>Sign up</strong>
                             </a>
                             <a class="button is-light" href="/login">

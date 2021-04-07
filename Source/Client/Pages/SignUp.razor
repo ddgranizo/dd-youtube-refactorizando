@@ -3,7 +3,7 @@
 @inject AppAuthenticationStateProvider AppAuthProvider
 @inject NavigationManager NavigationManager
 
-<section class="hero is-link is-fullheight">
+<section class="hero is-fullheight">
   <div class="hero-body">
     <div class="container">
       <div class="columns is-centered">
@@ -60,6 +60,13 @@
                 @errorMessage
               </div>
           }
+
+          @if (singUpCompleted)
+          {
+              <div class="notification is-success">
+                Signup completed. Plase, check your email for confirm the address!
+              </div>
+          }
         </div>
       </div>
     </div>
@@ -74,6 +81,7 @@
   private SignUpRequest request =  new SignUpRequest();
   private bool isLoading = false;
   private string LoadingButtonClass => isLoading ? "is-loading" : "";
+  private bool singUpCompleted;
   private async Task TrySignUp()
   {
       if (isLoading)
@@ -86,7 +94,7 @@
       if (signupRequest.IsOkResponse())
       {
           await AppAuthProvider.Login(signupRequest.Value);
-          NavigationManager.NavigateTo("/", true);
+          singUpCompleted = true;
       }
       else
       {

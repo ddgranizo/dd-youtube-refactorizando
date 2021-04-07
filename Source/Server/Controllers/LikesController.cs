@@ -62,7 +62,7 @@ namespace Refactorizando.Server.Controllers
             mapped.SystemUserId = userId;
             var request = await dbContext.LikeRequests.AddAsync(mapped);
             await dbContext.SaveChangesAsync();
-            return Ok(mapped.Id);
+            return Ok();
         }
 
         [HttpDelete("{requestId}")]

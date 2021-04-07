@@ -82,10 +82,8 @@ namespace Refactorizando.Server.Controllers
             {
                 UserName = model.Email,
                 Email = model.Email,
-                Name = model.Name
+                Name = model.Name,
             };
-            
-
             var result = await userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
@@ -102,7 +100,6 @@ namespace Refactorizando.Server.Controllers
                 user.ProfileUrl = url;
                 await userManager.AddToRoleAsync(user, "user");
                 var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
-                var secondResult = await userManager.ConfirmEmailAsync(user, confirmationToken);
                 var appEndpoint = configuration["APP_ENDPOINT"];
                 string codeHtmlVersion = HttpUtility.UrlEncode(confirmationToken);
                 var emailTemplateValues = new Dictionary<string, object>(){
@@ -144,7 +141,7 @@ namespace Refactorizando.Server.Controllers
         }
 
         [HttpPost("emailvalidation")]
-        public async Task<ActionResult<UserToken>> EmailValidation([FromQuery] string userId, [FromQuery] string token)
+        public async Task<ActionResult> EmailValidation([FromQuery] string userId, [FromQuery] string token)
         {
             var user = await userManager.FindByIdAsync(userId);
             if (user == null)
@@ -162,7 +159,6 @@ namespace Refactorizando.Server.Controllers
                 return BadRequest("Invalid validation token");
             }
         }
-
 
         [HttpPost("login")]
         public async Task<ActionResult<UserToken>> Login([FromBody] UserInfo userInfo)

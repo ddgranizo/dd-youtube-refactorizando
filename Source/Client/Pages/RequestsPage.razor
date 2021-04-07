@@ -3,7 +3,7 @@
 @inject IRequestService RequestService
 @inject IAuthService AuthService
 
-<section class="hero is-medium is-link">
+<section class="hero is-medium">
   <div class="hero-body">
     <p class="title">
       My requests
@@ -12,53 +12,21 @@
       Manage my requests
     </p>
     <div >
-      @if (isLoading)
-      {
-          <Loading />
-      }
-      else
-      {
-        
-          <div  class="row columns is-multiline">
-            @foreach (var item in myRequests.Values)
-            {
-                <div key="@(item.Id)" class="column is-4">
-                  <RequestItem  Request="item"  UserName="@userName" UserProfileImageUrl="@profileUrl"/>
-                </div>
-                
-            }
-            <div class="column is-4">
-                <div class="card" style="height: 100%;">
-                    <div class="card-content"  style="height: 100%;">
-                      <div class="columns has-text-centered is-vcentered"  style="height: 100%;">
-                        <div class="column " style="padding-top: 30px;">
-                          <a href="/requests/new" class="is-size-4" >
-                            <span class="icon is-small">
-                                <i class="mdi mdi-plus" aria-hidden="true"></i>
-                            </span>
-                            <span>Create new request!</span>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                </div>
-              </div>
-          </div>
-      }
+       
+        <RequestsGroup 
+          ShowAddNew="true" 
+          ProfilePictureHandler="(k => profileUrl)" 
+          UsernameHandler="(k => userName)" 
+          LoadDataHandler="(page => RequestService.GetMines(new QueryParameters(){Count = 9, Page = page}))" ></RequestsGroup>
+         
     </div>
   </div>
 </section>
-<ErrorDialog IsError="@isError" ErrorMessage="@errorMessage" OnClosedDialog="(k=>isError = false)"></ErrorDialog>
 
 
 @code{
 
   [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
-  private bool isError = false;
-  private string errorMessage;
-  private bool isLoading;
-
-  private DataSetResponse<RequestDto> myRequests = new DataSetResponse<RequestDto>();
 
   private string userName;
   private string profileUrl;
@@ -69,30 +37,8 @@
       var userInformation = await AuthenticationState;
       userName = userInformation.User.Claims.SingleOrDefault(k => k.Type == "UserName")?.Value;
       profileUrl = userInformation.User.Claims.SingleOrDefault(k => k.Type == "ProfileImage")?.Value;
-
-      await LoadMyRequests();
   }
-
-  private async Task LoadMyRequests()
-  {
-    isLoading = true;
-    var servicesResponse = await RequestService.GetMines(new QueryParameters(){Count = 10, Page = 1});
-    if (servicesResponse.IsOkResponse())
-    {
-        myRequests = servicesResponse.Value;
-    }
-    else
-    {
-        Error(servicesResponse.Message);
-    }
-    isLoading = false;
-  }
-
-  private void Error(string message)
-  {
-      isError = true;
-      errorMessage = message;
-  }
+  
 }
 
         
