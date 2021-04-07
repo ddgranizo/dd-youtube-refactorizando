@@ -1,0 +1,45 @@
+@inject ILocalStorageService LocalStorageService
+@inject NavigationManager NavigationManager
+
+@if (isChecked && !isAccepted)
+{
+    <div class="banner notification is-warning is-light">
+        <div class="banner__content">
+        This website use cookies to offer you a better browsing experience.
+
+        </div>
+        <div class="buttons">
+        <button class="button is-primary" @onclick="Accept">I accept cookies</button>
+        <button class="button is-link" @onclick="Refuse">I refuse cookies</button>
+        </div>
+    </div>
+}
+
+
+
+@code
+{
+    private bool isAccepted;
+    private bool isChecked;
+    protected override async Task OnInitializedAsync()
+    {
+        isChecked = false;
+        var cookieAccepted = await LocalStorageService.GetFromLocalStorage("cookie_consent");
+        if (cookieAccepted == "true")
+        {
+            isAccepted = true;   
+        }
+        isChecked = true;
+    }
+
+    private async Task Accept()
+    {
+        await LocalStorageService.SetInLocalStorage("cookie_consent", "true");
+        isAccepted = true;
+    }
+
+    private async Task Refuse()
+    {
+        NavigationManager.NavigateTo("https://www.google.com");
+    }
+}
