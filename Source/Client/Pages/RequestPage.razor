@@ -173,7 +173,7 @@
 <ConfirmDialog ConfirmButtonStyle="is-danger" IsOpen="isConfirmOpen" Message="The request will be removed. Confirm?" OnCancelDialog="(k => isConfirmOpen = false)" OnConfirmDialog="OnConfirmDelete" />
 <InputSelectEnumDialog @ref="stateRef" Type="Request.RequestStates" InitialValue="request?.State ?? Request.RequestStates.Pending" Title="Update state" OnClosedDialog="(k => isInputStateOpen = false)" OnConfirm="OnConfirmInputStateDialog" IsOpen="isInputStateOpen"></InputSelectEnumDialog>
 <InputSelectEnumDialog @ref="stateReasonRef" Type="Request.RequestStateReasons" InitialValue="request?.StateReason ?? Request.RequestStateReasons.Pending" Title="Update state reason" OnClosedDialog="(k => isInputStateReasonOpen = false)" OnConfirm="OnConfirmInputStateReasonDialog" IsOpen="isInputStateReasonOpen"></InputSelectEnumDialog>
-<InfoRenderFragmentDialog IsOpen="@isTermsDialogOpen" OnClosedDialog="(k=>isTermsDialogOpen = false)" Title="Terms and contiions">
+<InfoRenderFragmentDialog IsOpen="@isTermsDialogOpen" OnClosedDialog="(k=>isTermsDialogOpen = false)" Title="Terms and conditions">
 <div class="content">
 <ul>
   <li>The information about the repository URL and description will be published in the main webpage for learning purpose.</li>
