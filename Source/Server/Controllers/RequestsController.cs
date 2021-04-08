@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Refactorizando.Server.Services;
 using Refactorizando.Shared.Data.Models;
 using Refactorizando.Shared.Data.Models.Dtos;
+using Refactorizando.Shared.Utilities;
 
 namespace Refactorizando.Server.Controllers
 {
@@ -145,6 +146,10 @@ namespace Refactorizando.Server.Controllers
             {
                 return Unauthorized();
             }
+            if (!HttpUrlUtility.IsValidUrl(data.RepositoryUri))
+            {
+                return BadRequest("Invalid URL repository");
+            }
             record.RepositoryUri = data.RepositoryUri;
             record.Description = data.Description;
 
@@ -194,6 +199,18 @@ namespace Refactorizando.Server.Controllers
             if (!user.EmailConfirmed)
             {
                 return BadRequest("The user need to confirm email address before create any request");
+            }
+            if (string.IsNullOrEmpty(data.RepositoryUri))
+            {
+                return BadRequest("Missed repository");
+            }
+            if (string.IsNullOrEmpty(data.Description))
+            {
+                return BadRequest("Missed description");
+            }
+            if (!HttpUrlUtility.IsValidUrl(data.RepositoryUri))
+            {
+                return BadRequest("Invalid URL repository");
             }
             data.Id = Guid.Empty;
             data.CreatedOn = DateTime.Now;

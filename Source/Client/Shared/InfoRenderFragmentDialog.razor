@@ -1,0 +1,30 @@
+
+<div class="modal @DialogModalClass">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">@Title</p>
+            <button class="delete" aria-label="close" @onclick="Close"></button>
+        </header>
+        <section class="modal-card-body">
+            @ChildContent
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button is-info" @onclick="Close">Close</button>
+        </footer>
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string Title { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }  
+    [Parameter] public EventCallback OnClosedDialog { get; set; }
+    private string DialogModalClass => IsOpen ? "is-active" : "";
+
+    private async Task Close(){
+        await OnClosedDialog.InvokeAsync(null);
+    }
+}

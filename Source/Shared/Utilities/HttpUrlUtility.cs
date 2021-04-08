@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Text;
 
@@ -13,6 +14,11 @@ namespace Refactorizando.Shared.Utilities{
             return url;
         }
 
+
+        public static bool IsValidUrl(string uriName){
+            return Uri.TryCreate(uriName, UriKind.Absolute, out Uri uriResult) 
+                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        }
        
     }
 }

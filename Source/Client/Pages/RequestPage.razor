@@ -63,12 +63,7 @@
             {
               @if(isCreatingMode)
               {
-                <button class="button" aria-controls="dropdown-menu" @onclick="Save">
-                    <span class="icon is-small">
-                        <i class="mdi mdi-content-save" aria-hidden="true"></i>
-                    </span>
-                    <span>Save</span>
-                </button>
+               
               }
               else
               {
@@ -84,7 +79,7 @@
 
         <EditForm Model="request">
           <div class="field">
-            <label class="label">Repository URL (git based and public)</label>
+            <label class="label">Repository URL</label>
             <div class="control">
               <InputText  class="input" @bind-Value="request.RepositoryUri"></InputText>
             </div>
@@ -147,6 +142,24 @@
                 <a href="@request.VideoUrl" target="_blank">Video</a>
               </div>
           }
+
+          @if(isCreatingMode){
+              
+              <div class="field">
+                <div class="control">
+                  <label class="checkbox">
+                    <input type="checkbox" @bind="isAcceptedTerms">
+                    I agree to the <a href="#" @onclick="(k => isTermsDialogOpen = true)" @onclick:preventDefault>terms and conditions</a>
+                  </label>
+                </div>
+              </div>
+
+              <div class="field is-grouped">
+                <div class="control">
+                  <button class="button is-link" @onclick="Save">Submit</button>
+                </div>
+              </div>
+          }
         </EditForm>
       }
       
@@ -160,6 +173,16 @@
 <ConfirmDialog ConfirmButtonStyle="is-danger" IsOpen="isConfirmOpen" Message="The request will be removed. Confirm?" OnCancelDialog="(k => isConfirmOpen = false)" OnConfirmDialog="OnConfirmDelete" />
 <InputSelectEnumDialog @ref="stateRef" Type="Request.RequestStates" InitialValue="request?.State ?? Request.RequestStates.Pending" Title="Update state" OnClosedDialog="(k => isInputStateOpen = false)" OnConfirm="OnConfirmInputStateDialog" IsOpen="isInputStateOpen"></InputSelectEnumDialog>
 <InputSelectEnumDialog @ref="stateReasonRef" Type="Request.RequestStateReasons" InitialValue="request?.StateReason ?? Request.RequestStateReasons.Pending" Title="Update state reason" OnClosedDialog="(k => isInputStateReasonOpen = false)" OnConfirm="OnConfirmInputStateReasonDialog" IsOpen="isInputStateReasonOpen"></InputSelectEnumDialog>
+<InfoRenderFragmentDialog IsOpen="@isTermsDialogOpen" OnClosedDialog="(k=>isTermsDialogOpen = false)" Title="Terms and contiions">
+<div class="content">
+<ul>
+  <li>The information about the repository URL and description will be published in the main webpage for learning purpose.</li>
+  <li>You can delete your request at any time except if it has been already completed by the administrator (it means state=Completed).</li>
+  <li>The administrator is not obliged to process your request and it may be canceled without any reason or justification.</li>
+</ul>
+</div>
+
+</InfoRenderFragmentDialog>
 
 @code{
 
@@ -174,15 +197,23 @@
   private bool isError = false;
   private string errorMessage;
   private bool isDialogOpen = false;
+  private bool isTermsDialogOpen = false;
   private string dialogMessage;
   private bool isLoading;
   private RequestDto request = new RequestDto();
   private bool isMyRequest;
   private bool isAdminUser;
+
+  private bool isAcceptedTerms;
+
+  private string disabledClass => isAcceptedTerms ? "" : "disabled";
+ private string staticClass() => isCreatingMode ? "" : "is-static";
+  
   InputSelectEnumDialog<Request.RequestStates> stateRef;
   InputSelectEnumDialog<Request.RequestStateReasons> stateReasonRef;
   [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
 
+  
 
   private void NavigateToRequests()
   {
@@ -199,17 +230,25 @@
     isLoading = true;
     if (isCreatingMode)
     {
-        var response = await RequestService.Create(request);
-        if (response.IsOkResponse())
+        if (!isAcceptedTerms)
         {
-          Info("Changes saved!");
-          isMyRequest=true;
-          isCreatingMode = false;
-          NavigationManager.NavigateTo($"/requests/{response.Value}");
+            Error("Accept first the terms and conditions");
+           
         }
         else
         {
-          Error(response.Message);
+          var response = await RequestService.Create(request);
+          if (response.IsOkResponse())
+          {
+            Info("Changes saved!");
+            isMyRequest=true;
+            isCreatingMode = false;
+            NavigationManager.NavigateTo($"/requests/{response.Value}");
+          }
+          else
+          {
+            Error(response.Message);
+          }
         }
     }
     else
