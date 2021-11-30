@@ -25,6 +25,7 @@ using Mabar.Cross.Mailing.Client.Services;
 using Mabar.Cross.Mailing.Client.Models;
 using System.Net;
 using System.Web;
+using Refactorizando.Server.Adapters;
 
 namespace Refactorizando.Server.Controllers
 {
@@ -33,16 +34,8 @@ namespace Refactorizando.Server.Controllers
     public class AuthController : Controller
     {
         private readonly ILogger<AuthController> logger;
-        private readonly UserManager<SystemUser> userManager;
-        private readonly SignInManager<SystemUser> signInManager;
-        private readonly IConfiguration configuration;
-        private readonly IExecutionContext context;
-        private readonly IMapper mapper;
-        private readonly IImageGenerationService imageGenerationService;
-        private readonly IMailingService mailingService;
-        private readonly ApplicationDbContext dbContext;
+        private AuthAdapter authAdapter;
     
-
         public AuthController(
                 ILogger<AuthController> logger,
                 UserManager<SystemUser> userManager,
@@ -56,28 +49,38 @@ namespace Refactorizando.Server.Controllers
         {
             this.logger = logger
                 ?? throw new ArgumentNullException(nameof(logger));
-            this.userManager = userManager
-                ?? throw new ArgumentNullException(nameof(userManager));
-            this.signInManager = signInManager
-                ?? throw new ArgumentNullException(nameof(signInManager));
-            this.configuration = configuration
-                ?? throw new ArgumentNullException(nameof(configuration));
-            this.context = context 
-                ?? throw new ArgumentNullException(nameof(context));
-            this.mapper = mapper 
-                ?? throw new ArgumentNullException(nameof(mapper));
-            this.imageGenerationService = imageGenerationService 
-                ?? throw new ArgumentNullException(nameof(imageGenerationService));
-            this.mailingService = mailingService 
-                ?? throw new ArgumentNullException(nameof(mailingService));
-            this.dbContext = dbContext
-                ?? throw new ArgumentNullException(nameof(dbContext));
+            this.authAdapter = new AuthAdapter(
+                userManager,
+                signInManager,
+                configuration,
+                context,
+                mapper,
+                imageGenerationService,
+                mailingService,
+                dbContext);
+            
         }
 
 
         [HttpPost("signup")]
         public async Task<ActionResult<UserToken>> CreateUser([FromBody] SignUpRequest model)
         {
+            try
+            {
+                return Ok(authAdapter.CreateUser(model));
+            }
+            catch (Refactorizando.Server.Data.Exceptions.NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Refactorizando.Server.Data.Exceptions.BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (System.Exception ex)
+            {
+                return 
+            }
             var user = new SystemUser
             {
                 UserName = model.Email,
@@ -177,42 +180,5 @@ namespace Refactorizando.Server.Controllers
             }
         }
 
-        private UserToken BuildToken(string email, string userId, string profileImage, string userName, IList<string> roles)
-        {
-            var claims = new List<Claim>()
-            {
-                new Claim(JwtRegisteredClaimNames.UniqueName, email),
-                new Claim(ClaimTypes.Name, email),
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("ProfileImage", profileImage),
-                new Claim("UserName", userName),
-
-            };
-            foreach (var rol in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, rol));
-            }
-            var jwt = configuration.GetJwt();
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var expiration = DateTime.UtcNow.AddDays(30);
-
-            JwtSecurityToken token = new JwtSecurityToken(
-                issuer: null,
-                audience: null,
-                claims: claims,
-                expires: expiration,
-                signingCredentials: creds);
-
-            return new UserToken()
-            {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                Expiration = expiration
-            };
-        }
-
-
-    }
+        
 }
